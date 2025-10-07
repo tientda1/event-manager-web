@@ -1,0 +1,20 @@
+/* Main Styles Index - Import all styles in order */
+
+/* 1. Global styles - Base styles, variables, reset */
+@import './global.css';
+
+/* 2. Layout styles - Grid system, flexbox, spacing */
+@import './layout.css';
+
+/* 3. Component styles - Reusable component styles */
+@import './components.css';
+
+/* 4. Utility styles - Helper classes */
+@import './utilities.css';
+
+/* 5. Page-specific styles */
+@import './auth.css';
+@import './dashboard.css';
+
+/* 6. Third-party overrides */
+/* Ant Design overrides can go here if needed */

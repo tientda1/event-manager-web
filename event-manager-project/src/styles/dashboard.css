@@ -1,0 +1,192 @@
+/* Dashboard Layout Responsive Styles */
+
+/* Desktop Sidebar */
+.desktop-sidebar {
+  position: relative;
+}
+
+/* Mobile Drawer */
+.mobile-drawer .ant-drawer-body {
+  padding: 0 !important;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+  
+  .ant-layout-content {
+    margin: 16px 8px !important;
+    padding: 16px !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-drawer {
+    display: none !important;
+  }
+}
+
+/* Navbar responsive */
+@media (max-width: 768px) {
+  .ant-layout-header {
+    padding: 0 16px !important;
+  }
+  
+  .navbar-search {
+    display: none !important;
+  }
+  
+  .navbar-actions {
+    gap: 8px !important;
+  }
+  
+  .navbar-actions .ant-btn {
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-actions .ant-btn span {
+    display: none !important;
+  }
+  
+  .navbar-actions .ant-btn {
+    min-width: 32px !important;
+    padding: 4px !important;
+  }
+}
+
+/* Sidebar responsive */
+@media (max-width: 768px) {
+  .ant-layout-sider {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh !important;
+    z-index: 1001;
+  }
+}
+
+/* Content area responsive */
+@media (max-width: 768px) {
+  .ant-layout-content {
+    margin-left: 0 !important;
+    padding: 16px !important;
+    min-height: calc(100vh - 64px) !important;
+  }
+}
+
+/* Logo responsive */
+@media (max-width: 480px) {
+  .navbar-logo-text {
+    display: none !important;
+  }
+}
+
+/* Search responsive */
+@media (max-width: 1024px) {
+  .navbar-search {
+    max-width: 200px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-search {
+    display: none !important;
+  }
+}
+
+/* User menu responsive */
+@media (max-width: 480px) {
+  .navbar-user-name {
+    display: none !important;
+  }
+}
+
+/* Animation for sidebar */
+.ant-layout-sider {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Drawer animation */
+.ant-drawer {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Focus states */
+.navbar-search .ant-input:focus {
+  border-color: #0079bf !important;
+  box-shadow: 0 0 0 2px rgba(0, 121, 191, 0.2) !important;
+}
+
+/* Hover effects */
+.navbar-actions .ant-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Active states */
+.ant-menu-item-selected {
+  background-color: #e6f7ff !important;
+  color: #0079bf !important;
+}
+
+.ant-menu-item-selected::after {
+  display: none !important;
+}
+
+/* Custom scrollbar for sidebar */
+.ant-layout-sider::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ant-layout-sider::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.ant-layout-sider::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 2px;
+}
+
+.ant-layout-sider::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Board tiles */
+.board-tile {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.board-tile.minimal {
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+}
+
+.board-tile.create {
+  background: #f6ffed;
+  border: 1px dashed #b7eb8f;
+  color: #389e0d;
+}
+
+.board-tile-title {
+  font-weight: 600;
+  color: #172b4d;
+}
+
+.board-tile-edit {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.ant-card:hover .board-tile-edit {
+  opacity: 1;
+}
