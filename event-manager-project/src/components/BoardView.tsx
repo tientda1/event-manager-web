@@ -18,6 +18,10 @@ import Card from './Card';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import AddListModal from './AddListModal';
 import TaskDetailModal from './TaskDetailModal';
+import closeIcon from '../assets/images/close_icon.png';
+import boardIcon from '../assets/images/board_icon.png';
+import tableIcon from '../assets/images/table_icon.png';
+import filterIcon from '../assets/images/Img - Filter cards.png';
 
 const { Title } = Typography;
 
@@ -279,11 +283,12 @@ const BoardView: React.FC<BoardViewProps> = ({
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
+        gap: '32px',
         marginBottom: '16px',
         padding: '0 8px'
       }}>
-        {/* Left side - Title and Star */}
+        {/* Title and Star */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Title level={3} style={{ 
             margin: 0, 
@@ -305,82 +310,125 @@ const BoardView: React.FC<BoardViewProps> = ({
           />
         </div>
 
-        {/* Right side - View buttons and filters */}
+        {/* View buttons - Board, Table, Close this board */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {/* View buttons */}
           <Space size="small">
             <Button
               type={activeView === 'board' ? 'primary' : 'default'}
-              icon={<AppstoreOutlined />}
               onClick={() => setActiveView('board')}
               size="small"
               style={{
-                backgroundColor: activeView === 'board' ? '#0079bf' : 'transparent',
-                borderColor: activeView === 'board' ? '#0079bf' : '#d1d5db',
+                backgroundColor: activeView === 'board' ? '#666666' : 'transparent',
+                borderColor: activeView === 'board' ? '#666666' : '#d1d5db',
                 color: activeView === 'board' ? 'white' : '#42526e',
                 height: '32px',
                 padding: '0 12px',
                 borderRadius: '3px',
                 fontSize: '14px',
-                fontWeight: 'normal'
+                fontWeight: 'normal',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
               }}
             >
+              <img 
+                src={boardIcon} 
+                alt="Board" 
+                style={{ 
+                  width: '16px', 
+                  height: '16px',
+                  filter: activeView === 'board' ? 'brightness(0) invert(1)' : 'none'
+                }} 
+              />
               Board
             </Button>
             <Button
-              type={activeView === 'table' ? 'primary' : 'default'}
-              icon={<TableOutlined />}
+              type="text"
               onClick={() => setActiveView('table')}
               size="small"
               style={{
-                backgroundColor: activeView === 'table' ? '#0079bf' : 'transparent',
-                borderColor: activeView === 'table' ? '#0079bf' : '#d1d5db',
-                color: activeView === 'table' ? 'white' : '#42526e',
+                backgroundColor: 'transparent',
+                border: 'none',
+                color: '#42526e',
                 height: '32px',
                 padding: '0 12px',
                 borderRadius: '3px',
                 fontSize: '14px',
-                fontWeight: 'normal'
+                fontWeight: 'normal',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
               }}
             >
+              <img 
+                src={tableIcon} 
+                alt="Table" 
+                style={{ 
+                  width: '16px', 
+                  height: '16px'
+                }} 
+              />
               Table
             </Button>
             <Button
-              type="default"
-              icon={<CloseOutlined />}
+              type="text"
               onClick={handleCloseBoard}
               size="small"
               style={{
                 backgroundColor: 'transparent',
-                borderColor: '#0079bf',
-                color: '#0079bf',
+                border: 'none',
+                color: '#42526e',
                 height: '32px',
                 padding: '0 12px',
                 borderRadius: '3px',
                 fontSize: '14px',
-                fontWeight: 'normal'
+                fontWeight: 'normal',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
               }}
             >
+              <img 
+                src={closeIcon} 
+                alt="Close" 
+                style={{ 
+                  width: '16px', 
+                  height: '16px'
+                }} 
+              />
               Close this board
             </Button>
           </Space>
+        </div>
 
-          {/* Filters button */}
+        {/* Filters - Right side */}
+        <div style={{ marginLeft: 'auto' }}>
           <Button
-            type="default"
-            icon={<FilterOutlined />}
+            type="text"
             size="small"
             style={{
               backgroundColor: 'transparent',
-              borderColor: '#d1d5db',
+              border: 'none',
               color: '#42526e',
               height: '32px',
               padding: '0 12px',
               borderRadius: '3px',
               fontSize: '14px',
-              fontWeight: 'normal'
+              fontWeight: 'normal',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
+            <img 
+              src={filterIcon} 
+              alt="Filters" 
+              style={{ 
+                width: '16px', 
+                height: '16px'
+              }} 
+            />
             Filters
           </Button>
         </div>

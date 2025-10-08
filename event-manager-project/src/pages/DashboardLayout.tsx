@@ -20,8 +20,9 @@ const DashboardLayout = () => {
         <Navbar />
         <Content style={{
           background: '#f4f5f7', 
-          minHeight: 'calc(100vh - 48px)',
-          borderLeft: '1px solid #f0f0f0'
+          minHeight: 'calc(100vh - 64px)',
+          borderLeft: '1px solid #f0f0f0',
+          padding: '16px'
         }}>
           <Outlet />
         </Content>

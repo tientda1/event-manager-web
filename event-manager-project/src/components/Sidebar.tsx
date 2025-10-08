@@ -83,21 +83,23 @@ const Sidebar = () => {
         overflow: 'auto'
       }}
     >
-      {/* Header */}
+      {/* Logo Header - Separate Row */}
       <div style={{ 
         height: 64, 
         display: 'flex', 
         alignItems: 'center', 
-        justifyContent: 'flex-start',
-        padding: '0 24px',
-        borderBottom: '1px solid #f0f0f0'
+        justifyContent: 'center',
+        padding: '0 16px',
+        borderBottom: '1px solid #f0f0f0',
+        backgroundColor: '#fff'
       }}>
         <div 
           style={{ 
             display: 'flex', 
             alignItems: 'center', 
-            gap: '8px',
-            cursor: 'pointer'
+            justifyContent: 'center',
+            cursor: 'pointer',
+            width: '100%'
           }}
           onClick={handleLogoClick}
         >
@@ -105,7 +107,7 @@ const Sidebar = () => {
             src={trelloLogo} 
             alt="Trello Logo"
             style={{
-              height: 20,
+              height: 24,
               width: 'auto'
             }}
           />
@@ -113,7 +115,7 @@ const Sidebar = () => {
       </div>
       
       {/* Workspaces Section */}
-      <div style={{ padding: '16px 24px 8px 24px' }}>
+      <div style={{ padding: '12px 16px 8px 16px' }}>
         <Text style={{ 
           fontSize: '12px', 
           color: '#000000', 

@@ -15,8 +15,9 @@ const Navbar = () => {
       position: 'sticky',
       top: 0,
       zIndex: 1000,
-      height: '48px',
-      minHeight: '48px'
+      height: '64px',
+      minHeight: '64px',
+      borderBottom: '1px solid #f0f0f0'
     }}>
     </Header>
   );

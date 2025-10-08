@@ -120,7 +120,7 @@ const List: React.FC<ListProps> = ({ title, cards, onAddCard, onDeleteList, onDe
         )}
         <Button
           type="text"
-          icon={<MoreOutlined />}
+          icon={<MoreOutlined style={{ transform: 'rotate(90deg)' }} />}
           style={{
             color: '#42526e',
             padding: '4px',

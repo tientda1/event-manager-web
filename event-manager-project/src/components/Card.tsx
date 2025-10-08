@@ -82,7 +82,7 @@ const Card: React.FC<CardProps> = ({
         <div style={{ flex: 1 }}>
           <Text style={{
             fontSize: '14px',
-            color: isCompleted ? '#5aac44' : '#172b4d',
+            color: '#172b4d',
             lineHeight: '20px',
             display: 'block'
           }}>

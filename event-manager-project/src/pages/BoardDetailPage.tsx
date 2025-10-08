@@ -1,31 +1,26 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  Row, 
-  Col, 
   Card, 
   Typography, 
   Button, 
   Space, 
   Input, 
-  Tag, 
-  Avatar,
-  Dropdown,
-  Menu
+  Tag
 } from 'antd';
+import AddListModal from '../components/AddListModal';
+import BoardIcon from '../components/BoardIcon';
 import { 
   ArrowLeftOutlined,
   PlusOutlined, 
   StarOutlined, 
   StarFilled, 
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ShareAltOutlined
+  AppstoreOutlined,
+  TableOutlined,
+  FilterOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
 
 interface Task {
   id: number;
@@ -49,13 +44,12 @@ interface List {
 const BoardDetailPage = () => {
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
-  const [newListTitle, setNewListTitle] = useState('');
-  const [isAddingList, setIsAddingList] = useState(false);
+  const [isAddListModalVisible, setIsAddListModalVisible] = useState(false);
 
   // Mock data - sẽ được thay thế bằng Redux store
   const board = {
     id: parseInt(boardId || '101'),
-    title: "Dự án Website",
+    title: "Tổ chức sự kiện Year-end party !",
     description: "Quản lý tiến độ dự án website công ty",
     backdrop: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/640px-Cat_August_2010-4.jpg",
     is_starred: true,
@@ -125,41 +119,24 @@ const BoardDetailPage = () => {
     }
   ];
 
-  const handleAddList = () => {
-    if (newListTitle.trim()) {
-      // TODO: Implement add list logic
-      console.log('Add new list:', newListTitle);
-      setNewListTitle('');
-      setIsAddingList(false);
-    }
+  const handleAddListModal = (listName: string) => {
+    // TODO: Implement add list logic
+    console.log('Add new list via modal:', listName);
+    setIsAddListModalVisible(false);
+  };
+
+  const handleOpenAddListModal = () => {
+    setIsAddListModalVisible(true);
+  };
+
+  const handleCloseAddListModal = () => {
+    setIsAddListModalVisible(false);
   };
 
   const handleStarClick = () => {
     // TODO: Implement star/unstar logic
     console.log('Toggle star for board:', board.id);
   };
-
-  const boardMenuItems = [
-    {
-      key: 'edit',
-      icon: <EditOutlined />,
-      label: 'Chỉnh sửa board',
-    },
-    {
-      key: 'share',
-      icon: <ShareAltOutlined />,
-      label: 'Chia sẻ',
-    },
-    {
-      type: 'divider' as const,
-    },
-    {
-      key: 'delete',
-      icon: <DeleteOutlined />,
-      label: 'Xóa board',
-      danger: true,
-    },
-  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -170,50 +147,136 @@ const BoardDetailPage = () => {
   };
 
   return (
-    <div>
-      {/* Header */}
+    <div style={{ marginTop: '16px' }}>
+      {/* Back Button */}
+      <div style={{ marginBottom: 16 }}>
+        <Button 
+          icon={<ArrowLeftOutlined />} 
+          onClick={() => navigate('/dashboard')}
+          style={{ color: '#666', borderColor: '#d9d9d9' }}
+        >
+          Quay lại
+        </Button>
+      </div>
+
+      {/* Board Header - Matching Original Design */}
       <div style={{ 
-        marginBottom: 24, 
-        background: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${board.backdrop})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundColor: '#f5f5f5',
+        padding: '16px 24px',
         borderRadius: 8,
-        padding: 24,
-        color: 'white'
+        marginBottom: 24,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        minHeight: '64px'
       }}>
-        <Space style={{ marginBottom: 16 }}>
-          <Button 
-            icon={<ArrowLeftOutlined />} 
-            onClick={() => navigate('/dashboard')}
-            style={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}
-          >
-            Quay lại
-          </Button>
+        {/* Left Section - Title and Star */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Title level={3} style={{ 
+            margin: 0, 
+            color: '#0079bf', 
+            fontSize: 20,
+            fontWeight: 600
+          }}>
+            {board.title}
+          </Title>
           <Button
             type="text"
             icon={board.is_starred ? <StarFilled /> : <StarOutlined />}
-            style={{ color: board.is_starred ? '#faad14' : 'white' }}
+            style={{ 
+              color: board.is_starred ? '#faad14' : '#666',
+              padding: '4px 8px',
+              border: 'none',
+              background: 'transparent'
+            }}
             onClick={handleStarClick}
           />
-          <Dropdown
-            menu={{ items: boardMenuItems }}
-            placement="bottomRight"
-            arrow
-          >
-            <Button
-              type="text"
-              icon={<MoreOutlined />}
-              style={{ color: 'white' }}
-            />
-          </Dropdown>
-        </Space>
+        </div>
 
-        <Title level={2} style={{ color: 'white', margin: 0 }}>
-          {board.title}
-        </Title>
-        <Text style={{ color: 'rgba(255,255,255,0.8)' }}>
-          {board.description}
-        </Text>
+        {/* Middle Section - View Options */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Button
+            type="primary"
+            icon={<AppstoreOutlined />}
+            style={{ 
+              backgroundColor: '#0079bf',
+              borderColor: '#0079bf',
+              color: 'white',
+              borderRadius: '4px',
+              height: '32px',
+              padding: '0 12px',
+              fontSize: '14px',
+              fontWeight: 500
+            }}
+          >
+            Board
+          </Button>
+          <Button
+            style={{ 
+              backgroundColor: '#f5f5f5',
+              borderColor: '#0079bf',
+              color: '#0079bf',
+              borderRadius: '4px',
+              height: '32px',
+              padding: '0 12px',
+              fontSize: '14px',
+              fontWeight: 500
+            }}
+            icon={<TableOutlined />}
+          >
+            Table
+          </Button>
+          <Button
+            style={{ 
+              backgroundColor: '#f5f5f5',
+              borderColor: '#0079bf',
+              color: '#0079bf',
+              borderRadius: '4px',
+              height: '32px',
+              padding: '0 12px',
+              fontSize: '14px',
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <div 
+              style={{ 
+                width: '16px', 
+                height: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                color: '#0079bf'
+              }}
+            >
+              ✕
+            </div>
+            Close this board
+          </Button>
+        </div>
+
+        {/* Right Section - Filters */}
+        <div>
+          <Button
+            style={{ 
+              backgroundColor: '#f5f5f5',
+              borderColor: '#0079bf',
+              color: '#0079bf',
+              borderRadius: '4px',
+              height: '32px',
+              padding: '0 12px',
+              fontSize: '14px',
+              fontWeight: 500
+            }}
+            icon={<FilterOutlined />}
+          >
+            Filters
+          </Button>
+        </div>
       </div>
 
       {/* Lists */}
@@ -299,48 +362,27 @@ const BoardDetailPage = () => {
         ))}
 
         {/* Add new list */}
-        {isAddingList ? (
-          <Card style={{ minWidth: 300, maxWidth: 300 }}>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Input
-                placeholder="Nhập tên danh sách..."
-                value={newListTitle}
-                onChange={(e) => setNewListTitle(e.target.value)}
-                onPressEnter={handleAddList}
-                autoFocus
-              />
-              <Space>
-                <Button type="primary" size="small" onClick={handleAddList}>
-                  Thêm
-                </Button>
-                <Button 
-                  size="small" 
-                  onClick={() => {
-                    setIsAddingList(false);
-                    setNewListTitle('');
-                  }}
-                >
-                  Hủy
-                </Button>
-              </Space>
-            </Space>
-          </Card>
-        ) : (
-          <Button
-            type="dashed"
-            icon={<PlusOutlined />}
-            onClick={() => setIsAddingList(true)}
-            style={{ 
-              minWidth: 300, 
-              height: 60,
-              borderStyle: 'dashed',
-              borderColor: '#d9d9d9'
-            }}
-          >
-            Thêm danh sách khác
-          </Button>
-        )}
+        <Button
+          type="dashed"
+          icon={<PlusOutlined />}
+          onClick={handleOpenAddListModal}
+          style={{ 
+            minWidth: 300, 
+            height: 60,
+            borderStyle: 'dashed',
+            borderColor: '#d9d9d9'
+          }}
+        >
+          Thêm danh sách khác
+        </Button>
       </div>
+
+      {/* Add List Modal */}
+      <AddListModal
+        visible={isAddListModalVisible}
+        onClose={handleCloseAddListModal}
+        onAddList={handleAddListModal}
+      />
     </div>
   );
 };

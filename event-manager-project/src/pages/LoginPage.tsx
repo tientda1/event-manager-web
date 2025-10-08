@@ -1,5 +1,7 @@
 import { Form, Input, Button, Typography, Checkbox } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
+import { showErrorToast, showSuccessToast } from '../components/CustomToast';
+import { authenticateUser } from '../utils/authUtils';
 
 const { Title, Text } = Typography;
 
@@ -15,6 +17,33 @@ const LoginPage = () => {
 
   const onFinish = (values: LoginFormData) => {
     console.log('Login values:', values);
+    
+    // Check for empty fields first
+    const errors: string[] = [];
+    if (!values.email) {
+      errors.push('Email không được để trống');
+    }
+    if (!values.password) {
+      errors.push('Mật khẩu không được để trống');
+    }
+    
+    if (errors.length > 0) {
+      showErrorToast(errors);
+      return;
+    }
+    
+    // Authenticate user against registered users
+    const authenticatedUser = authenticateUser(values.email, values.password);
+    
+    if (!authenticatedUser) {
+      showErrorToast(['Email hoặc mật khẩu không tồn tại!']);
+      return;
+    }
+    
+    // Store user info in localStorage for session management
+    localStorage.setItem('currentUser', JSON.stringify(authenticatedUser));
+    
+    showSuccessToast('Đăng nhập thành công!');
     navigate('/dashboard');
   };
 
@@ -44,8 +73,7 @@ const LoginPage = () => {
           <Form.Item
             name="email"
             rules={[
-              { required: true, message: 'Email không được bỏ trống!' },
-              { type: 'email', message: 'Email không hợp lệ!' }
+              { required: true, message: 'Email không được để trống!' }
             ]}
             className="auth-form-item"
           >
@@ -58,7 +86,7 @@ const LoginPage = () => {
           <Form.Item
             name="password"
             rules={[
-              { required: true, message: 'Mật khẩu không được bỏ trống!' }
+              { required: true, message: 'Mật khẩu không được để trống!' }
             ]}
             className="auth-form-item"
           >

@@ -1,12 +1,14 @@
 import React from 'react';
 import { Form, Input, Button, Typography } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
+import { showSuccessToast, showErrorToast } from '../components/CustomToast';
+import { saveUser, userExists } from '../utils/authUtils';
 
 const { Title, Text } = Typography;
 
 interface RegisterFormData {
+  fullName: string;
   email: string;
-  username: string;
   password: string;
   confirmPassword: string;
 }
@@ -17,8 +19,26 @@ const RegisterPage = () => {
 
   const onFinish = (values: RegisterFormData) => {
     console.log('Register values:', values);
-    // TODO: Implement register logic
-    navigate('/dashboard');
+    
+    // Check if user already exists
+    if (userExists(values.email)) {
+      showErrorToast(['Email này đã được sử dụng!']);
+      return;
+    }
+    
+    // Save user to localStorage
+    const userData = {
+      fullName: values.fullName,
+      email: values.email,
+      password: values.password
+    };
+    
+    if (saveUser(userData)) {
+      showSuccessToast('Đăng ký thành công!');
+      navigate('/login');
+    } else {
+      showErrorToast(['Có lỗi xảy ra khi đăng ký!']);
+    }
   };
 
   return (
@@ -44,10 +64,23 @@ const RegisterPage = () => {
           className="auth-form"
         >
           <Form.Item
+            name="fullName"
+            rules={[
+              { required: true, message: 'Họ và tên không được để trống!' }
+            ]}
+            className="auth-form-item"
+          >
+            <Input 
+              className="auth-input"
+              placeholder="Họ và tên"
+            />
+          </Form.Item>
+
+          <Form.Item
             name="email"
             rules={[
-              { required: true, message: 'Email không được bỏ trống!' },
-              { type: 'email', message: 'Email không hợp lệ!' }
+              { required: true, message: 'Email không được để trống!' },
+              { type: 'email', message: 'Email phải đúng định dạng!' }
             ]}
             className="auth-form-item"
           >
@@ -58,24 +91,10 @@ const RegisterPage = () => {
           </Form.Item>
 
           <Form.Item
-            name="username"
-            rules={[
-              { required: true, message: 'Username không được bỏ trống!' },
-              { min: 3, message: 'Username phải có ít nhất 3 ký tự!' }
-            ]}
-            className="auth-form-item"
-          >
-            <Input 
-              className="auth-input"
-              placeholder="Username"
-            />
-          </Form.Item>
-
-          <Form.Item
             name="password"
             rules={[
-              { required: true, message: 'Mật khẩu không được bỏ trống!' },
-              { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' }
+              { required: true, message: 'Mật khẩu không được để trống!' },
+              { min: 8, message: 'Mật khẩu tối thiểu 8 ký tự!' }
             ]}
             className="auth-form-item"
           >

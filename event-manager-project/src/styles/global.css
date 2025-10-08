@@ -171,6 +171,160 @@ a {
   background: #a8a8a8;
 }
 
+/* Custom Toast Styles */
+.Toastify__toast-container {
+  width: 400px;
+}
+
+.Toastify__toast {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: inherit;
+  font-size: 14px;
+  min-height: 60px;
+  padding: 16px;
+}
+
+.Toastify__toast--error {
+  background-color: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #262626;
+}
+
+.Toastify__toast--success {
+  background-color: #f6ffed;
+  border: 1px solid #b7eb8f;
+  color: #262626;
+}
+
+.Toastify__toast-body {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Hide default toast icons */
+.Toastify__toast-icon {
+  display: none !important;
+}
+
+
+.Toastify__close-button {
+  color: inherit;
+  opacity: 0.6;
+  font-size: 16px;
+  font-weight: normal;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1;
+}
+
+.Toastify__progress-bar {
+  height: 3px;
+}
+
+.Toastify__progress-bar--error {
+  background: #ff4d4f;
+}
+
+.Toastify__progress-bar--success {
+  background: #52c41a;
+}
+
+/* Custom Toast Component Styles */
+.custom-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.custom-toast__icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.custom-toast--error .custom-toast__icon {
+  background-color: #ff4d4f;
+  color: white;
+}
+
+.custom-toast--success .custom-toast__icon {
+  background-color: #52c41a;
+  color: white;
+}
+
+.custom-toast__content {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.custom-toast__title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: #262626;
+}
+
+.custom-toast__message {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 2px;
+  color: #262626;
+}
+
+.custom-toast__message:last-child {
+  margin-bottom: 0;
+}
+
+/* Board Button Styles - Override Ant Design */
+.ant-btn.board-button-gray {
+  background-color: #666666 !important;
+  border-color: #666666 !important;
+  color: white !important;
+}
+
+.ant-btn.board-button-gray:hover {
+  background-color: #666666 !important;
+  border-color: #666666 !important;
+  color: white !important;
+}
+
+.ant-btn.board-button-gray:focus {
+  background-color: #666666 !important;
+  border-color: #666666 !important;
+  color: white !important;
+}
+
+.ant-btn.board-button-gray:active {
+  background-color: #666666 !important;
+  border-color: #666666 !important;
+  color: white !important;
+}
+
 /* Print styles */
 @media print {
   * {
