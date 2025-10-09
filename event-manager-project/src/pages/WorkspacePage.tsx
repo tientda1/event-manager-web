@@ -1,79 +1,280 @@
-import { useState } from 'react';
-import { Typography, Button, Row, Col, Card, Space, Dropdown } from 'antd';
+import { useState, useEffect } from 'react';
+import { Typography, Button, Row, Col, Card, Space, Dropdown, Spin, Alert } from 'antd';
 import { 
   CalendarOutlined, 
   DownOutlined,
-  EditOutlined
+  EditOutlined,
+  DeleteOutlined,
+  StarOutlined,
+  StarFilled,
+  ReloadOutlined
 } from '@ant-design/icons';
-import boardImg1 from '../assets/images/board-img-1.jpg';
+import { useNavigate } from 'react-router-dom';
 import CreateBoardModal from '../components/CreateBoardModal';
 import UpdateBoardModal from '../components/UpdateBoardModal';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
+import { getBoardsByUserId, createBoard, updateBoard, deleteBoard, Board } from '../api/boardsApi';
+import { getCurrentUser } from '../utils/authUtils';
 
 const { Title, Text } = Typography;
 
 const WorkspacePage = () => {
+  const navigate = useNavigate();
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
-  const [selectedBoard, setSelectedBoard] = useState<any>(null);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  // Mock data cho boards
-  const boards = [
-    {
-      id: 101,
-      title: "123123213",
-      description: "Manage project tasks and deadlines",
-      backgroundImage: boardImg1
-    },
-    {
-      id: 102,
-      title: "42314",
-      description: "Team workspace for collaboration",
-      backgroundImage: boardImg1
-    },
-    {
-      id: 103,
-      title: "My Trello board",
-      description: "Personal task management",
-      backgroundImage: boardImg1
-    },
-    {
-      id: 104,
-      title: "Tổ chức sự kiện Year-end party!",
-      description: "Kế hoạch tổ chức tiệc cuối năm",
-      backgroundImage: boardImg1
+  // Load boards data
+  const loadBoards = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const user = getCurrentUser();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      const boardsData = await getBoardsByUserId(user.id);
+      setBoards(boardsData);
+    } catch (err: any) {
+      setError(err.message || 'Không thể tải danh sách boards');
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  // Mock data cho starred boards
-  const starredBoards = [
-    {
-      id: 105,
-      title: "Important Board 01",
-      description: "Critical project board",
-      backgroundImage: boardImg1
-    },
-    {
-      id: 106,
-      title: "Important Board 02",
-      description: "High priority tasks",
-      backgroundImage: boardImg1
-    }
-  ];
-
-  const handleCreateBoard = (boardData: { title: string; background: string; type: 'image' | 'color' }) => {
-    console.log('Creating board:', boardData);
-    // TODO: Implement actual board creation logic
   };
 
-  const handleUpdateBoard = (boardData: { title: string; background: string; type: 'image' | 'color' }) => {
-    console.log('Updating board:', boardData);
-    // TODO: Implement actual board update logic
+  useEffect(() => {
+    loadBoards();
+  }, []);
+
+  // Filter boards by type
+  const starredBoards = boards.filter(board => board.is_starred);
+  const closedBoards = boards.filter(board => 
+    board.title.toLowerCase().includes('closed') || 
+    board.title.toLowerCase().includes('archived') ||
+    board.title.toLowerCase().includes('done')
+  );
+
+  const handleCreateBoard = async (boardData: { title: string; background: string; type: 'image' | 'color' }) => {
+    try {
+      setActionLoading(true);
+      const user = getCurrentUser();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      
+      await createBoard({
+        user_id: user.id,
+        title: boardData.title,
+        description: '',
+        backdrop: boardData.background,
+        is_starred: false
+      });
+      
+      await loadBoards(); // Reload boards after creation
+    } catch (err: any) {
+      console.error('Error creating board:', err);
+      // TODO: Show error toast
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleEditBoard = (board: any) => {
+  const handleUpdateBoard = async (boardData: { title: string; background: string; type: 'image' | 'color' }) => {
+    if (!selectedBoard?.id) return;
+    
+    try {
+      setActionLoading(true);
+      
+      await updateBoard(selectedBoard.id, {
+        title: boardData.title,
+        backdrop: boardData.background
+      });
+      
+      await loadBoards(); // Reload boards after update
+    } catch (err: any) {
+      console.error('Error updating board:', err);
+      // TODO: Show error toast
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteBoard = async () => {
+    if (!selectedBoard?.id) return;
+    
+    try {
+      setActionLoading(true);
+      
+      await deleteBoard(selectedBoard.id);
+      
+      await loadBoards(); // Reload boards after deletion
+      setIsDeleteModalVisible(false);
+      setSelectedBoard(null);
+    } catch (err: any) {
+      console.error('Error deleting board:', err);
+      // TODO: Show error toast
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEditBoard = (board: Board) => {
     setSelectedBoard(board);
     setIsUpdateModalVisible(true);
   };
+
+  const handleDeleteBoardClick = (board: Board) => {
+    setSelectedBoard(board);
+    setIsDeleteModalVisible(true);
+  };
+
+  const handleStarBoard = async (board: Board) => {
+    try {
+      setActionLoading(true);
+      
+      await updateBoard(board.id!, {
+        is_starred: !board.is_starred
+      });
+      
+      await loadBoards(); // Reload boards after star toggle
+    } catch (err: any) {
+      console.error('Error toggling star:', err);
+      // TODO: Show error toast
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBoardClick = (board: Board) => {
+    navigate(`/dashboard/boards/${board.id}`);
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert
+        message="Lỗi tải dữ liệu"
+        description={error}
+        type="error"
+        action={
+          <Button size="small" icon={<ReloadOutlined />} onClick={loadBoards}>
+            Thử lại
+          </Button>
+        }
+        showIcon
+      />
+    );
+  }
+
+  const renderBoardCard = (board: Board) => (
+    <Col xs={24} sm={12} md={8} lg={6} key={board.id}>
+      <div
+        className="board-card"
+        style={{
+          height: 160,
+          backgroundColor: board.backdrop.startsWith('#') ? board.backdrop : '#0079bf', // Fallback color
+          backgroundImage: board.backdrop.startsWith('#') ? 'none' : `url(${board.backdrop})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          position: 'relative',
+          borderRadius: 8,
+          cursor: 'pointer',
+          overflow: 'hidden',
+          transition: 'transform 0.2s ease',
+          border: '1px solid #e1e4e8'
+        }}
+        onClick={() => handleBoardClick(board)}
+      >
+        {/* Board Content */}
+        <div style={{
+          padding: 16,
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          background: 'transparent',
+          color: 'white'
+        }}>
+          <div>
+            <Title level={4} style={{ margin: '0 0 8px 0', fontSize: 16, color: 'white' }}>
+              {board.title}
+            </Title>
+            <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
+              {board.description}
+            </Text>
+          </div>
+          
+          {/* Action Buttons - Only visible on hover */}
+          <div className="edit-button-container" style={{ display: 'flex', gap: '8px' }}>
+            <Button 
+              type="primary" 
+              size="small"
+              icon={board.is_starred ? <StarFilled /> : <StarOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleStarBoard(board);
+              }}
+              loading={actionLoading}
+              style={{ 
+                flex: 1,
+                backgroundColor: board.is_starred ? '#faad14' : '#2C3E5D',
+                borderColor: board.is_starred ? '#faad14' : '#2C3E5D'
+              }}
+            >
+              {board.is_starred ? 'Starred' : 'Star'}
+            </Button>
+            <Button 
+              type="primary" 
+              size="small"
+              icon={<EditOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditBoard(board);
+              }}
+              style={{ 
+                flex: 1,
+                backgroundColor: '#2C3E5D',
+                borderColor: '#2C3E5D'
+              }}
+            >
+              Edit
+            </Button>
+            <Button 
+              type="primary" 
+              size="small"
+              icon={<DeleteOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteBoardClick(board);
+              }}
+              style={{ 
+                flex: 1,
+                backgroundColor: '#ff4d4f',
+                borderColor: '#ff4d4f'
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Col>
+  );
 
   return (
     <div>
@@ -139,64 +340,7 @@ const WorkspacePage = () => {
       <div style={{ padding: '0 16px' }}>
         <Row gutter={[16, 16]}>
           {/* Board Cards */}
-          {boards.map((board) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={board.id}>
-              <div
-                className="board-card"
-                style={{
-                  height: 160,
-                  backgroundImage: `url(${board.backgroundImage})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  position: 'relative',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                  transition: 'transform 0.2s ease'
-                }}
-              >
-                {/* Board Content */}
-                <div style={{
-                  padding: 16,
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 100%)',
-                  color: 'white'
-                }}>
-                  <div>
-                    <Title level={4} style={{ margin: '0 0 8px 0', fontSize: 16, color: 'white' }}>
-                      {board.title}
-                    </Title>
-                    <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
-                      {board.description}
-                    </Text>
-                  </div>
-                  
-                  {/* Edit Button - Only visible on hover */}
-                  <div className="edit-button-container">
-                    <Button 
-                      type="primary" 
-                      size="small"
-                      icon={<EditOutlined />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditBoard(board);
-                      }}
-                      style={{ 
-                        width: '80%',
-                        backgroundColor: '#2C3E5D',
-                        borderColor: '#2C3E5D'
-                      }}
-                    >
-                      Edit this board
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Col>
-          ))}
+          {boards.map(renderBoardCard)}
 
           <Col xs={24} sm={12} md={8} lg={6}>
             <Card
@@ -261,56 +405,34 @@ const WorkspacePage = () => {
 
       {/* Starred Boards Section */}
       <div style={{ padding: '0 16px' }}>
-        
         <Row gutter={[16, 16]}>
-          {starredBoards.map((board) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={board.id}>
-              <Card
-                hoverable
-                style={{
-                  height: 160,
-                  backgroundImage: `url(${board.backgroundImage})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  position: 'relative'
-                }}
-                bodyStyle={{ 
-                  padding: 16,
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  color: 'white'
-                }}
-              >
-                <div>
-                  <Title level={4} style={{ margin: '0 0 8px 0', fontSize: 16, color: 'white' }}>
-                    {board.title}
-                  </Title>
-                  <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>
-                    {board.description}
-                  </Text>
-                </div>
-                
-                <div style={{ marginTop: 'auto' }}>
-                  <Button 
-                    type="primary" 
-                    size="small"
-                    icon={<EditOutlined />}
-                    style={{ 
-                      width: '80%',
-                      backgroundColor: '#2C3E5D',
-                      borderColor: '#2C3E5D'
-                    }}
-                  >
-                    Edit this board
-                  </Button>
-                </div>
-              </Card>
-            </Col>
-          ))}
+          {starredBoards.map(renderBoardCard)}
         </Row>
       </div>
+
+      {/* Closed Boards Section - Only show if there are closed boards */}
+      {closedBoards.length > 0 && (
+        <>
+          <div style={{ 
+            marginBottom: 24,
+            backgroundColor: '#ffffff',
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <Title level={3} style={{ margin: 0, color: '#262626', fontSize: 18 }}>
+              Closed Boards
+            </Title>
+          </div>
+
+          <div style={{ padding: '0 16px' }}>
+            <Row gutter={[16, 16]}>
+              {closedBoards.map(renderBoardCard)}
+            </Row>
+          </div>
+        </>
+      )}
 
       {/* Create Board Modal */}
       <CreateBoardModal
@@ -326,9 +448,21 @@ const WorkspacePage = () => {
         onUpdate={handleUpdateBoard}
         initialData={selectedBoard ? {
           title: selectedBoard.title,
-          background: selectedBoard.backgroundImage,
+          background: selectedBoard.backdrop,
           type: 'image'
         } : undefined}
+      />
+
+      {/* Delete Board Modal */}
+      <DeleteConfirmationModal
+        visible={isDeleteModalVisible}
+        onClose={() => setIsDeleteModalVisible(false)}
+        onConfirm={handleDeleteBoard}
+        title="Xóa Board?"
+        message="Bạn có chắc chắn muốn xóa board này không? Hành động này không thể hoàn tác!"
+        itemName={selectedBoard?.title}
+        loading={actionLoading}
+        confirmText="Xóa Board"
       />
     </div>
   );

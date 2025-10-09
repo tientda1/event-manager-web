@@ -17,27 +17,33 @@ const RegisterPage = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  const onFinish = (values: RegisterFormData) => {
+  const onFinish = async (values: RegisterFormData) => {
     console.log('Register values:', values);
     
-    // Check if user already exists
-    if (userExists(values.email)) {
-      showErrorToast(['Email này đã được sử dụng!']);
-      return;
-    }
-    
-    // Save user to localStorage
-    const userData = {
-      fullName: values.fullName,
-      email: values.email,
-      password: values.password
-    };
-    
-    if (saveUser(userData)) {
-      showSuccessToast('Đăng ký thành công!');
-      navigate('/login');
-    } else {
-      showErrorToast(['Có lỗi xảy ra khi đăng ký!']);
+    try {
+      // Check if user already exists using API
+      const exists = await userExists(values.email);
+      if (exists) {
+        showErrorToast(['Email này đã được sử dụng!']);
+        return;
+      }
+      
+      // Save user using API
+      const userData = {
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password
+      };
+      
+      const success = await saveUser(userData);
+      if (success) {
+        showSuccessToast('Đăng ký thành công!');
+        navigate('/login');
+      } else {
+        showErrorToast(['Có lỗi xảy ra khi đăng ký!']);
+      }
+    } catch (error: any) {
+      showErrorToast([error.message || 'Có lỗi xảy ra khi đăng ký!']);
     }
   };
 

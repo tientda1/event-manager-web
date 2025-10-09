@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Connection</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #f6ffed; border-color: #b7eb8f; }
+        .error { background-color: #fff2f0; border-color: #ffccc7; }
+        button { padding: 10px 15px; margin: 5px; background: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #40a9ff; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>API Test Page</h1>
+    <p>Kiểm tra kết nối đến JSON Server API</p>
+
+    <div class="test-section">
+        <h3>Test Users API</h3>
+        <button onclick="testUsersAPI()">Test Users</button>
+        <button onclick="testBoardsAPI()">Test Boards</button>
+        <button onclick="testListsAPI()">Test Lists</button>
+        <button onclick="testTasksAPI()">Test Tasks</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+        
+        async function testAPI(endpoint, description) {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = `<p>Đang test ${description}...</p>`;
+                
+                const response = await fetch(`${API_BASE}${endpoint}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="test-section success">
+                        <h4>✅ ${description} - Thành công!</h4>
+                        <p>Số lượng records: ${Array.isArray(data) ? data.length : 'N/A'}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="test-section error">
+                        <h4>❌ ${description} - Lỗi!</h4>
+                        <p><strong>Lỗi:</strong> ${error.message}</p>
+                        <p><strong>Endpoint:</strong> ${API_BASE}${endpoint}</p>
+                        <p><strong>Nguyên nhân có thể:</strong></p>
+                        <ul>
+                            <li>JSON Server chưa chạy (npm run server)</li>
+                            <li>Port 3001 bị chiếm dụng</li>
+                            <li>File db.json không tồn tại hoặc bị lỗi</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+        
+        function testUsersAPI() {
+            testAPI('/users', 'Users API');
+        }
+        
+        function testBoardsAPI() {
+            testAPI('/boards', 'Boards API');
+        }
+        
+        function testListsAPI() {
+            testAPI('/lists', 'Lists API');
+        }
+        
+        function testTasksAPI() {
+            testAPI('/tasks', 'Tasks API');
+        }
+        
+        // Auto test khi load trang
+        window.onload = function() {
+            setTimeout(testUsersAPI, 1000);
+        };
+    </script>
+</body>
+</html>

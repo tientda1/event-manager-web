@@ -16,21 +16,21 @@ interface UpdateBoardModalProps {
 }
 
 const UpdateBoardModal = ({ visible, onClose, onUpdate, initialData }: UpdateBoardModalProps) => {
-  const [boardTitle, setBoardTitle] = useState('');
-  const [selectedBackground, setSelectedBackground] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
-  const [titleError, setTitleError] = useState('');
-
   const backgroundImages = [
-    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200',
-    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=200',
-    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200',
-    'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=200'
+    '/src/assets/images/Background.png',
+    '/src/assets/images/Background_1.png',
+    '/src/assets/images/Background_2.png',
+    '/src/assets/images/Background_3.png'
   ];
 
   const colors = [
     '#ff9500', '#8e44ad', '#27ae60', '#00bcd4', '#f39c12', '#e91e63'
   ];
+
+  const [boardTitle, setBoardTitle] = useState('');
+  const [selectedBackground, setSelectedBackground] = useState<string | null>(backgroundImages[0]); // Default to first background
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState('');
 
   useEffect(() => {
     if (initialData && visible) {
@@ -48,7 +48,7 @@ const UpdateBoardModal = ({ visible, onClose, onUpdate, initialData }: UpdateBoa
 
   const handleUpdate = () => {
     if (!boardTitle.trim()) {
-      setTitleError('Please provide a valid board title.');
+      setTitleError('Vui lòng nhập tiêu đề board.');
       return;
     }
 

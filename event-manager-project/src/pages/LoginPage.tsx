@@ -1,7 +1,7 @@
 import { Form, Input, Button, Typography, Checkbox } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { showErrorToast, showSuccessToast } from '../components/CustomToast';
-import { authenticateUser } from '../utils/authUtils';
+import { authenticateUser, setCurrentUser } from '../utils/authUtils';
 
 const { Title, Text } = Typography;
 
@@ -15,7 +15,7 @@ const LoginPage = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  const onFinish = (values: LoginFormData) => {
+  const onFinish = async (values: LoginFormData) => {
     console.log('Login values:', values);
     
     // Check for empty fields first
@@ -32,19 +32,23 @@ const LoginPage = () => {
       return;
     }
     
-    // Authenticate user against registered users
-    const authenticatedUser = authenticateUser(values.email, values.password);
-    
-    if (!authenticatedUser) {
-      showErrorToast(['Email hoặc mật khẩu không tồn tại!']);
-      return;
+    try {
+      // Authenticate user using API
+      const authenticatedUser = await authenticateUser(values.email, values.password);
+      
+      if (!authenticatedUser) {
+        showErrorToast(['Email hoặc mật khẩu không đúng!']);
+        return;
+      }
+      
+      // Store user info in localStorage for session management
+      setCurrentUser(authenticatedUser);
+      
+      showSuccessToast('Đăng nhập thành công!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      showErrorToast([error.message || 'Có lỗi xảy ra khi đăng nhập!']);
     }
-    
-    // Store user info in localStorage for session management
-    localStorage.setItem('currentUser', JSON.stringify(authenticatedUser));
-    
-    showSuccessToast('Đăng nhập thành công!');
-    navigate('/dashboard');
   };
 
   return (

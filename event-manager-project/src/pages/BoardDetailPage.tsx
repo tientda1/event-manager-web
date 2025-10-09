@@ -5,11 +5,12 @@ import {
   Typography, 
   Button, 
   Space, 
-  Input, 
-  Tag
+  Tag,
+  Spin,
+  Alert
 } from 'antd';
 import AddListModal from '../components/AddListModal';
-import BoardIcon from '../components/BoardIcon';
+import { BoardDataManager } from '../components/BoardDataManager';
 import { 
   ArrowLeftOutlined,
   PlusOutlined, 
@@ -17,8 +18,10 @@ import {
   StarFilled, 
   AppstoreOutlined,
   TableOutlined,
-  FilterOutlined
+  FilterOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
+import type { Board, List as ApiList, Task as ApiTask, Tag as ApiTag } from '../api/boardsApi';
 
 const { Title, Text } = Typography;
 
@@ -46,343 +49,223 @@ const BoardDetailPage = () => {
   const navigate = useNavigate();
   const [isAddListModalVisible, setIsAddListModalVisible] = useState(false);
 
-  // Mock data - sẽ được thay thế bằng Redux store
-  const board = {
-    id: parseInt(boardId || '101'),
-    title: "Tổ chức sự kiện Year-end party !",
-    description: "Quản lý tiến độ dự án website công ty",
-    backdrop: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/640px-Cat_August_2010-4.jpg",
-    is_starred: true,
-    created_at: "2025-02-28T12:30:00Z"
-  };
-
-  const lists: List[] = [
-    {
-      id: 201,
-      title: "Việc cần làm",
-      tasks: [
-        {
-          id: 301,
-          title: "Thiết kế giao diện",
-          description: "Tạo wireframe cho trang chủ và các trang con",
-          status: "pending",
-          due_date: "2025-03-05T23:59:59Z",
-          tags: [
-            { id: 401, content: "Urgent", color: "#ff4d4f" },
-            { id: 402, content: "Design", color: "#52c41a" }
-          ]
-        },
-        {
-          id: 302,
-          title: "Setup database",
-          description: "Cài đặt và cấu hình database cho dự án",
-          status: "pending",
-          due_date: "2025-03-03T23:59:59Z",
-          tags: [
-            { id: 403, content: "Backend", color: "#1890ff" }
-          ]
-        }
-      ]
-    },
-    {
-      id: 202,
-      title: "Đang thực hiện",
-      tasks: [
-        {
-          id: 303,
-          title: "Code frontend",
-          description: "Phát triển giao diện người dùng với React",
-          status: "in_progress",
-          due_date: "2025-03-10T23:59:59Z",
-          tags: [
-            { id: 404, content: "Frontend", color: "#722ed1" },
-            { id: 405, content: "In Progress", color: "#fa8c16" }
-          ]
-        }
-      ]
-    },
-    {
-      id: 203,
-      title: "Hoàn thành",
-      tasks: [
-        {
-          id: 304,
-          title: "Tạo logo",
-          description: "Thiết kế logo cho website",
-          status: "completed",
-          due_date: "2025-02-25T23:59:59Z",
-          tags: [
-            { id: 406, content: "Completed", color: "#52c41a" }
-          ]
-        }
-      ]
+  // Component để render khi có dữ liệu
+  const renderBoardContent = ({ board, lists, tasks, tags, loading, error, refetch }: {
+    board: Board | null;
+    lists: ApiList[];
+    tasks: { [listId: number]: ApiTask[] };
+    tags: { [taskId: number]: ApiTag[] };
+    loading: boolean;
+    error: string | null;
+    refetch: () => void;
+  }) => {
+    if (loading) {
+      return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+          <Spin size="large" />
+        </div>
+      );
     }
-  ];
 
-  const handleAddListModal = (listName: string) => {
-    // TODO: Implement add list logic
-    console.log('Add new list via modal:', listName);
-    setIsAddListModalVisible(false);
-  };
-
-  const handleOpenAddListModal = () => {
-    setIsAddListModalVisible(true);
-  };
-
-  const handleCloseAddListModal = () => {
-    setIsAddListModalVisible(false);
-  };
-
-  const handleStarClick = () => {
-    // TODO: Implement star/unstar logic
-    console.log('Toggle star for board:', board.id);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return '#52c41a';
-      case 'in_progress': return '#fa8c16';
-      default: return '#d9d9d9';
+    if (error) {
+      return (
+        <Alert
+          message="Lỗi tải dữ liệu"
+          description={error}
+          type="error"
+          action={
+            <Button size="small" icon={<ReloadOutlined />} onClick={refetch}>
+              Thử lại
+            </Button>
+          }
+          showIcon
+        />
+      );
     }
+
+    if (!board) {
+      return (
+        <Alert
+          message="Không tìm thấy board"
+          description="Board này không tồn tại hoặc đã bị xóa."
+          type="warning"
+          showIcon
+        />
+      );
+    }
+
+    // Chuyển đổi dữ liệu từ API sang format của component List
+    const listsWithTasks: List[] = lists.map(list => ({
+      id: list.id!,
+      title: list.title,
+      tasks: (tasks[list.id!] || []).map(task => ({
+        id: task.id!,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        due_date: task.due_date || '',
+        tags: (tags[task.id!] || []).map(tag => ({
+          id: tag.id!,
+          content: tag.content,
+          color: tag.color
+        }))
+      }))
+    }));
+
+    return (
+      <div>
+        {/* Header */}
+        <div style={{ 
+          backgroundImage: `url(${board.backdrop})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          padding: '20px',
+          marginBottom: '20px',
+          borderRadius: '8px',
+          position: 'relative',
+          minHeight: '200px'
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: '8px'
+          }}></div>
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <Space style={{ marginBottom: '16px' }}>
+              <Button 
+                icon={<ArrowLeftOutlined />} 
+                onClick={() => navigate('/dashboard')}
+                style={{ color: 'white', borderColor: 'white' }}
+              >
+                Quay lại
+              </Button>
+              <Button 
+                icon={board.is_starred ? <StarFilled /> : <StarOutlined />}
+                style={{ color: board.is_starred ? '#faad14' : 'white', borderColor: 'white' }}
+              >
+                {board.is_starred ? 'Đã yêu thích' : 'Yêu thích'}
+              </Button>
+            </Space>
+
+            <Title level={1} style={{ color: 'white', margin: 0 }}>
+              {board.title}
+            </Title>
+            <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '16px' }}>
+              {board.description}
+            </Text>
+          </div>
+        </div>
+
+        {/* Toolbar */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '20px',
+          padding: '0 8px'
+        }}>
+          <Space>
+            <Button icon={<AppstoreOutlined />}>Board</Button>
+            <Button icon={<TableOutlined />}>Table</Button>
+            <Button icon={<FilterOutlined />}>Filter</Button>
+          </Space>
+
+          <Space>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />}
+              onClick={() => setIsAddListModalVisible(true)}
+            >
+              Thêm danh sách
+            </Button>
+          </Space>
+        </div>
+
+        {/* Lists Container */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '16px', 
+          overflowX: 'auto',
+          paddingBottom: '20px'
+        }}>
+          {listsWithTasks.map((list) => (
+            <Card
+              key={list.id}
+              title={list.title}
+              style={{ 
+                minWidth: '300px', 
+                flexShrink: 0,
+                height: 'fit-content'
+              }}
+              bodyStyle={{ padding: '12px' }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {list.tasks.map((task) => (
+                  <Card
+                    key={task.id}
+                    size="small"
+                    hoverable
+                    style={{ marginBottom: '8px' }}
+                  >
+                    <div>
+                      <Text strong>{task.title}</Text>
+                      {task.description && (
+                        <div style={{ marginTop: '4px' }}>
+                          <Text type="secondary" style={{ fontSize: '12px' }}>
+                            {task.description}
+                          </Text>
+                        </div>
+                      )}
+                      {task.due_date && (
+                        <div style={{ marginTop: '4px' }}>
+                          <Text type="secondary" style={{ fontSize: '12px' }}>
+                            Due: {new Date(task.due_date).toLocaleDateString('vi-VN')}
+                          </Text>
+                        </div>
+                      )}
+                      {task.tags.length > 0 && (
+                        <div style={{ marginTop: '8px' }}>
+                          <Space size={[0, 4]} wrap>
+                            {task.tags.map((tag) => (
+                              <Tag key={tag.id} color={tag.color} style={{ margin: 0 }}>
+                                {tag.content}
+                              </Tag>
+                            ))}
+                          </Space>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Add List Modal */}
+        <AddListModal
+          visible={isAddListModalVisible}
+          onCancel={() => setIsAddListModalVisible(false)}
+          onSubmit={(listData) => {
+            console.log('Creating list:', listData);
+            // TODO: Implement create list API call
+            setIsAddListModalVisible(false);
+          }}
+        />
+      </div>
+    );
   };
 
   return (
-    <div style={{ marginTop: '16px' }}>
-      {/* Back Button */}
-      <div style={{ marginBottom: 16 }}>
-        <Button 
-          icon={<ArrowLeftOutlined />} 
-          onClick={() => navigate('/dashboard')}
-          style={{ color: '#666', borderColor: '#d9d9d9' }}
-        >
-          Quay lại
-        </Button>
-      </div>
-
-      {/* Board Header - Matching Original Design */}
-      <div style={{ 
-        backgroundColor: '#f5f5f5',
-        padding: '16px 24px',
-        borderRadius: 8,
-        marginBottom: 24,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        minHeight: '64px'
-      }}>
-        {/* Left Section - Title and Star */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Title level={3} style={{ 
-            margin: 0, 
-            color: '#0079bf', 
-            fontSize: 20,
-            fontWeight: 600
-          }}>
-            {board.title}
-          </Title>
-          <Button
-            type="text"
-            icon={board.is_starred ? <StarFilled /> : <StarOutlined />}
-            style={{ 
-              color: board.is_starred ? '#faad14' : '#666',
-              padding: '4px 8px',
-              border: 'none',
-              background: 'transparent'
-            }}
-            onClick={handleStarClick}
-          />
-        </div>
-
-        {/* Middle Section - View Options */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Button
-            type="primary"
-            icon={<AppstoreOutlined />}
-            style={{ 
-              backgroundColor: '#0079bf',
-              borderColor: '#0079bf',
-              color: 'white',
-              borderRadius: '4px',
-              height: '32px',
-              padding: '0 12px',
-              fontSize: '14px',
-              fontWeight: 500
-            }}
-          >
-            Board
-          </Button>
-          <Button
-            style={{ 
-              backgroundColor: '#f5f5f5',
-              borderColor: '#0079bf',
-              color: '#0079bf',
-              borderRadius: '4px',
-              height: '32px',
-              padding: '0 12px',
-              fontSize: '14px',
-              fontWeight: 500
-            }}
-            icon={<TableOutlined />}
-          >
-            Table
-          </Button>
-          <Button
-            style={{ 
-              backgroundColor: '#f5f5f5',
-              borderColor: '#0079bf',
-              color: '#0079bf',
-              borderRadius: '4px',
-              height: '32px',
-              padding: '0 12px',
-              fontSize: '14px',
-              fontWeight: 500,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            <div 
-              style={{ 
-                width: '16px', 
-                height: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                fontWeight: 'bold',
-                color: '#0079bf'
-              }}
-            >
-              ✕
-            </div>
-            Close this board
-          </Button>
-        </div>
-
-        {/* Right Section - Filters */}
-        <div>
-          <Button
-            style={{ 
-              backgroundColor: '#f5f5f5',
-              borderColor: '#0079bf',
-              color: '#0079bf',
-              borderRadius: '4px',
-              height: '32px',
-              padding: '0 12px',
-              fontSize: '14px',
-              fontWeight: 500
-            }}
-            icon={<FilterOutlined />}
-          >
-            Filters
-          </Button>
-        </div>
-      </div>
-
-      {/* Lists */}
-      <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16 }}>
-        {lists.map((list) => (
-          <Card
-            key={list.id}
-            title={list.title}
-            style={{ 
-              minWidth: 300, 
-              maxWidth: 300,
-              height: 'fit-content'
-            }}
-            bodyStyle={{ padding: 12 }}
-            headStyle={{ padding: '0 12px' }}
-            extra={
-              <Button 
-                type="text" 
-                icon={<PlusOutlined />} 
-                size="small"
-                onClick={() => console.log('Add task to list:', list.id)}
-              />
-            }
-          >
-            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              {list.tasks.map((task) => (
-                <Card
-                  key={task.id}
-                  size="small"
-                  hoverable
-                  style={{ 
-                    cursor: 'pointer',
-                    borderLeft: `4px solid ${getStatusColor(task.status)}`
-                  }}
-                  onClick={() => console.log('Open task:', task.id)}
-                >
-                  <div>
-                    <Text strong style={{ fontSize: 14 }}>
-                      {task.title}
-                    </Text>
-                    {task.description && (
-                      <Text 
-                        type="secondary" 
-                        style={{ 
-                          display: 'block', 
-                          fontSize: 12, 
-                          marginTop: 4,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {task.description}
-                      </Text>
-                    )}
-                    <div style={{ marginTop: 8 }}>
-                      <Space size="small" wrap>
-                        {task.tags.map((tag) => (
-                          <Tag 
-                            key={tag.id} 
-                            color={tag.color}
-                            style={{ fontSize: 10, margin: 0 }}
-                          >
-                            {tag.content}
-                          </Tag>
-                        ))}
-                      </Space>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-              
-              <Button 
-                type="dashed" 
-                block 
-                icon={<PlusOutlined />}
-                onClick={() => console.log('Add task to list:', list.id)}
-              >
-                Thêm task
-              </Button>
-            </Space>
-          </Card>
-        ))}
-
-        {/* Add new list */}
-        <Button
-          type="dashed"
-          icon={<PlusOutlined />}
-          onClick={handleOpenAddListModal}
-          style={{ 
-            minWidth: 300, 
-            height: 60,
-            borderStyle: 'dashed',
-            borderColor: '#d9d9d9'
-          }}
-        >
-          Thêm danh sách khác
-        </Button>
-      </div>
-
-      {/* Add List Modal */}
-      <AddListModal
-        visible={isAddListModalVisible}
-        onClose={handleCloseAddListModal}
-        onAddList={handleAddListModal}
-      />
+    <div style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <BoardDataManager boardId={parseInt(boardId || '101')}>
+        {renderBoardContent}
+      </BoardDataManager>
     </div>
   );
 };

@@ -1,63 +1,92 @@
-// Utility functions for authentication
+// Utility functions for authentication - Updated to use API
 
-export interface User {
+import { registerUser, loginUser, type User } from '../api/authApi';
+
+// Legacy interface for backward compatibility
+export interface LegacyUser {
   fullName: string;
   email: string;
   password: string;
 }
 
 const USERS_STORAGE_KEY = 'registered_users';
+const CURRENT_USER_KEY = 'currentUser';
 
-// Get all registered users from localStorage
-export const getRegisteredUsers = (): User[] => {
+// Get current user from localStorage
+export const getCurrentUser = (): User | null => {
   try {
-    const users = localStorage.getItem(USERS_STORAGE_KEY);
-    return users ? JSON.parse(users) : [];
+    const user = localStorage.getItem(CURRENT_USER_KEY);
+    return user ? JSON.parse(user) : null;
   } catch (error) {
-    console.error('Error reading users from localStorage:', error);
-    return [];
+    console.error('Error reading current user from localStorage:', error);
+    return null;
   }
 };
 
-// Save a new user to localStorage
-export const saveUser = (user: User): boolean => {
+// Set current user in localStorage
+export const setCurrentUser = (user: User): void => {
   try {
-    const users = getRegisteredUsers();
-    
-    // Check if user already exists
-    const existingUser = users.find(u => u.email === user.email);
-    if (existingUser) {
-      return false; // User already exists
-    }
-    
-    users.push(user);
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-    return true; // User saved successfully
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
   } catch (error) {
-    console.error('Error saving user to localStorage:', error);
+    console.error('Error saving current user to localStorage:', error);
+  }
+};
+
+// Remove current user from localStorage (logout)
+export const removeCurrentUser = (): void => {
+  try {
+    localStorage.removeItem(CURRENT_USER_KEY);
+  } catch (error) {
+    console.error('Error removing current user from localStorage:', error);
+  }
+};
+
+// Register new user using API
+export const saveUser = async (userData: LegacyUser): Promise<boolean> => {
+  try {
+    await registerUser({
+      username: userData.fullName,
+      email: userData.email,
+      password: userData.password
+    });
+    return true;
+  } catch (error) {
+    console.error('Error registering user:', error);
     return false;
   }
 };
 
-// Authenticate user login
-export const authenticateUser = (email: string, password: string): User | null => {
+// Authenticate user using API
+export const authenticateUser = async (email: string, password: string): Promise<User | null> => {
   try {
-    const users = getRegisteredUsers();
-    const user = users.find(u => u.email === email && u.password === password);
-    return user || null;
+    const user = await loginUser({ email, password });
+    return user;
   } catch (error) {
     console.error('Error authenticating user:', error);
     return null;
   }
 };
 
-// Check if user exists by email
-export const userExists = (email: string): boolean => {
+// Check if user exists by email using API
+export const userExists = async (email: string): Promise<boolean> => {
   try {
-    const users = getRegisteredUsers();
+    // Try to find user by email
+    const response = await fetch('http://localhost:3001/users');
+    const users: User[] = await response.json();
     return users.some(u => u.email === email);
   } catch (error) {
     console.error('Error checking if user exists:', error);
     return false;
+  }
+};
+
+// Legacy functions for backward compatibility (now use localStorage as fallback)
+export const getRegisteredUsers = (): LegacyUser[] => {
+  try {
+    const users = localStorage.getItem(USERS_STORAGE_KEY);
+    return users ? JSON.parse(users) : [];
+  } catch (error) {
+    console.error('Error reading users from localStorage:', error);
+    return [];
   }
 };
